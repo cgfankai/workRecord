@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Work Record</title>
+    <link rel="stylesheet" type="text/css" href="/plugins/easyui/themes/default/easyui.css">
+    <link rel="stylesheet" type="text/css" href="/plugins/easyui/themes/icon.css">
+    <link rel="stylesheet" type="text/css" href="/plugins/easyui/themes/color.css">
+    <link rel="stylesheet" type="text/css" href="/plugins/easyui/demo/demo.css">
+    <script type="text/javascript" src="/plugins//jquery.min.js"></script>
+    <script type="text/javascript" src="/plugins/easyui/jquery.easyui.min.js"></script>
+</head>
+<body>
+
+<table id="dg" title="Work Records" class="easyui-datagrid" style=""
+       url="/api/record/query"
+       toolbar="#toolbar" pagination="true"
+       rownumbers="true" fitColumns="true" singleSelect="true" nowrap="false"
+       pageList="[30,100,500,1000,2000]" pageSize="30"
+>
+    <thead>
+    <tr>
+        <th field="systemName" width="30">系统名称</th>
+        <th field="taskDetail" width="80">任务详情</th>
+        <th field="taskDate" width="30">任务时间</th>
+    </tr>
+    </thead>
+</table>
+<div id="toolbar">
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-add" plain="true" onclick="newRecord()">New
+        Record</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-edit" plain="true" onclick="editRecord()">Edit
+        Record</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="destroyRecord()">Remove
+        Record</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-remove" plain="true" onclick="weekReport()">Week
+        Report
+        Record</a>
+</div>
+
+<div id="dlg" class="easyui-dialog" style="width:400px"
+     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-buttons'">
+    <form id="fm" method="post" novalidate style="margin:0;padding:20px 50px">
+        <h3>Record Information</h3>
+        <div style="margin-bottom:10px">
+            <input id="combobox_systemName" class="easyui-combobox" name="systemName" required="true" label="系统名称:"
+                   style="width:100%"
+                   data-options="valueField:'id',textField:'text',url:'/api/record/distinct/system_name'">
+
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="taskDetail" class="easyui-textbox" required="true" label="任务详情:"
+                   style="width:100%;height:150px" multiline="true">
+        </div>
+        <div style="margin-bottom:10px">
+            <input name="taskDate" type="text" class="easyui-datebox" required="required" label="任务时间:"
+                   style="width:100%" data-options="formatter:myformatter,parser:myparser">
+        </div>
+
+    </form>
+</div>
+<div id="dlg-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="saveRecord()"
+       style="width:90px">Save</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+       onclick="javascript:$('#dlg').dialog('close')" style="width:90px">Cancel</a>
+</div>
+
+
+<div id="dlg-week" class="easyui-dialog" style="width:700px"
+     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-week-buttons'">
+    <form id="fm-week" method="post" novalidate style="margin:0;padding:20px 50px">
+        <div style="margin-bottom:10px">
+            <input name="startDate" type="text" class="easyui-datebox" required="required" label="开始时间:"
+                   style="width:49%" data-options="formatter:myformatter,parser:myparser">
+            <input name="endDate" type="text" class="easyui-datebox" required="required" label="结束时间:"
+                   style="width:49%" data-options="formatter:myformatter,parser:myparser">
+        </div>
+
+        <div style="margin-bottom:10px">
+            <input id="week-content" class="easyui-textbox" label="任务详情:"
+                   style="width:100%;height:200px" multiline="true">
+        </div>
+
+    </form>
+</div>
+<div id="dlg-week-buttons">
+    <a href="javascript:void(0)" class="easyui-linkbutton c6" iconCls="icon-ok" onclick="queryWeekReport()"
+       style="width:90px">Query</a>
+    <a href="javascript:void(0)" class="easyui-linkbutton" iconCls="icon-cancel"
+       onclick="javascript:$('#dlg-week').dialog('close')" style="width:90px">Cancel</a>
+</div>
+
+
+<script type="text/javascript">
+    var url;
+
+    function newRecord() {
+        $("#combobox_systemName").combobox("reload");
+        $('#dlg').dialog('open').dialog('center').dialog('setTitle', 'New Record');
+        $('#fm').form('clear');
+        url = '/api/record/save';
+    }
+
+    function editRecord() {
+        $("#combobox_systemName").combobox("reload");
+        var row = $('#dg').datagrid('getSelected');
+        if (row) {
+            $('#dlg').dialog('open').dialog('center').dialog('setTitle', 'Edit Record');
+            $('#fm').form('load', row);
+            url = '/api/record/save?id=' + row.id;
+        }
+    }
+
+    function saveRecord() {
+        $('#fm').form('submit', {
+            url: url,
+            iframe: false,
+            onSubmit: function () {
+                return $(this).form('validate');
+            },
+            success: function (result) {
+                var result = eval('(' + result + ')');
+                if (result.errorMsg) {
+                    $.messager.show({
+                        title: 'Error',
+                        msg: result.errorMsg
+                    });
+                } else {
+                    $('#dlg').dialog('close');        // close the dialog
+                    $('#dg').datagrid('reload');    // reload the Record data
+                }
+            }
+        });
+    }
+
+    function destroyRecord() {
+        var row = $('#dg').datagrid('getSelected');
+        if (row) {
+            $.messager.confirm('Confirm', 'Are you sure you want to destroy this Record?', function (r) {
+                if (r) {
+                    $.get('/api/record/delete/' + row.id, function (result) {
+                        $('#dg').datagrid('reload');
+                    }, 'json');
+                }
+            });
+        }
+    }
+
+    function weekReport() {
+        $('#dlg-week').dialog('open').dialog('center').dialog('setTitle', '周报');
+        $('#fm-week').form('clear');
+    }
+
+    function queryWeekReport() {
+        $('#fm-week').form('submit', {
+            url: "/api/record/export/range/date",
+            iframe: false,
+            onSubmit: function () {
+                return $(this).form('validate');
+            },
+            success: function (result) {
+                $("#week-content").textbox("setText", result)
+            }
+        });
+    }
+
+
+    function myformatter(date) {
+        var y = date.getFullYear();
+        var m = date.getMonth() + 1;
+        var d = date.getDate();
+        return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+    }
+
+    function myparser(s) {
+        if (!s) return new Date();
+        var ss = (s.split('-'));
+        var y = parseInt(ss[0], 10);
+        var m = parseInt(ss[1], 10);
+        var d = parseInt(ss[2], 10);
+        if (!isNaN(y) && !isNaN(m) && !isNaN(d)) {
+            return new Date(y, m - 1, d);
+        } else {
+            return new Date();
+        }
+    }
+</script>
+</body>
+</html>
