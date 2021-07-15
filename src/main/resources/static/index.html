@@ -71,9 +71,9 @@
      data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-week-buttons'">
     <form id="fm-week" method="post" novalidate style="margin:0;padding:20px 50px">
         <div style="margin-bottom:10px">
-            <input name="startDate" type="text" class="easyui-datebox" required="required" label="开始时间:"
+            <input id="startDate" name="startDate" type="text" class="easyui-datebox" required="required" label="开始时间:"
                    style="width:49%" data-options="formatter:myformatter,parser:myparser">
-            <input name="endDate" type="text" class="easyui-datebox" required="required" label="结束时间:"
+            <input id="endDate" name="endDate" type="text" class="easyui-datebox" required="required" label="结束时间:"
                    style="width:49%" data-options="formatter:myformatter,parser:myparser">
         </div>
 
@@ -147,30 +147,25 @@
         }
     }
 
-    function weekReport() {
-        $('#dlg-week').dialog('open').dialog('center').dialog('setTitle', '周报');
-        $('#fm-week').form('clear');
-    }
-
-    function queryWeekReport() {
-        $('#fm-week').form('submit', {
-            url: "/api/record/export/range/date",
-            iframe: false,
-            onSubmit: function () {
-                return $(this).form('validate');
-            },
-            success: function (result) {
-                $("#week-content").textbox("setText", result)
-            }
-        });
-    }
-
-
     function myformatter(date) {
         var y = date.getFullYear();
         var m = date.getMonth() + 1;
         var d = date.getDate();
         return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
+    }
+
+    function getMondayDate(date) {
+        var weekDay = date.getDay();
+        var oneDayMillSeconds = 24 * 60 * 60 * 1000;
+        var oriVal = date.valueOf();
+        var mondayVal = 0;
+        if (weekDay > 0) {
+            mondayVal = oriVal - ((weekDay - 1) * oneDayMillSeconds);
+        }
+        if (weekDay == 0) {
+            mondayVal = oriVal - (6 * oneDayMillSeconds);
+        }
+        return new Date(mondayVal);
     }
 
     function myparser(s) {
@@ -184,6 +179,27 @@
         } else {
             return new Date();
         }
+    }
+
+    function weekReport() {
+        $('#dlg-week').dialog('open').dialog('center').dialog('setTitle', '周报');
+        $('#fm-week').form('clear');
+        var nowDate = new Date();
+        $("#endDate").datebox("setValue", myformatter(nowDate));
+        $("#startDate").datebox("setValue", myformatter(getMondayDate(nowDate)));
+    }
+
+    function queryWeekReport() {
+        $('#fm-week').form('submit', {
+            url: "/api/record/export/range/date",
+            iframe: false,
+            onSubmit: function () {
+                return $(this).form('validate');
+            },
+            success: function (result) {
+                $("#week-content").textbox("setText", result)
+            }
+        });
     }
 </script>
 </body>
