@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.override.MybatisMapperProxy;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fk.record.config.Util;
 import com.fk.record.entity.Common;
 import com.fk.record.entity.Record;
 import org.springframework.web.bind.annotation.*;
@@ -24,16 +25,13 @@ public interface CommonController<T extends Common> {
     public BaseMapper<T> getMapper();
 
     @RequestMapping("/query")
-    public default Map<String, Object> list(@RequestParam(value = "page", defaultValue = "1") Integer page, @RequestParam(value = "rows", defaultValue = "20") Integer rows) {
+    public default Map<String, Object> list(@RequestParam(value = "page", defaultValue = "1") Integer page,
+                                            @RequestParam(value = "rows", defaultValue = "20") Integer rows,
+                                            @RequestParam(value = "filterRules", required = false) String filterRules) {
         Map<String, Object> rlt = new HashMap<>();
         QueryWrapper<T> queryWrapper = new QueryWrapper<>();
-        if (this.getClass().getName().contains("Record")) {
-            queryWrapper.orderByDesc(new ArrayList<String>(2) {
-                {
-                    this.add("task_date");
-                    this.add("system_name");
-                } });
-
+        if (filterRules != null && !filterRules.trim().isEmpty()) {
+            Util.updateQueryWrapperForFilters(queryWrapper, filterRules);
         }
         IPage<T> iPage = this.getMapper().selectPage(new Page<T>(page, rows), queryWrapper);
         rlt.put("total", iPage.getTotal());
