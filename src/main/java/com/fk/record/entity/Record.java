@@ -12,4 +12,6 @@ public class Record extends Common{
 
     private String taskDate;
 
+    private String period;
+
 }

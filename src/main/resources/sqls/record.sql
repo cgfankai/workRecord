@@ -6,3 +6,6 @@ create table if not exists record(
     create_time TEXT NULL DEFAULT(datetime('now','+8 hours')),
     is_deleted integer not null default(0)
 )
+
+
+alter table record add period TEXT null;
