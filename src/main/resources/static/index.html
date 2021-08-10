@@ -68,7 +68,8 @@
         </div>
 
         <div style="margin-bottom:10px">
-            <select id="select_period" class="easyui-combobox" name="period" required="true" style="width:100%" label="时段:">
+            <select id="select_period" class="easyui-combobox" name="period" required="true" style="width:100%"
+                    label="时段:">
                 <option value="上午">上午</option>
                 <option value="下午">下午</option>
                 <option value="晚上">晚上</option>
@@ -173,7 +174,7 @@
         return y + '-' + (m < 10 ? ('0' + m) : m) + '-' + (d < 10 ? ('0' + d) : d);
     }
 
-    function getSaturdayDate(date) {
+    function getLastSaturdayDate(date) {
         var weekDay = date.getDay() + 2;
         var oneDayMillSeconds = 24 * 60 * 60 * 1000;
         var oriVal = date.valueOf();
@@ -184,6 +185,22 @@
         if (weekDay == 0) {
             mondayVal = oriVal - (6 * oneDayMillSeconds);
         }
+        return new Date(mondayVal);
+    }
+
+    function getThisSaturdayDate(date) {
+        var weekDay = date.getDay();
+        var oneDayMillSeconds = 24 * 60 * 60 * 1000;
+        var oriVal = date.valueOf();
+        var mondayVal = oriVal + ((6 - weekDay) * (oneDayMillSeconds));
+        return new Date(mondayVal);
+    }
+
+    function getSundayDate(date) {
+        var weekDay = date.getDay();
+        var oneDayMillSeconds = 24 * 60 * 60 * 1000;
+        var oriVal = date.valueOf();
+        var mondayVal = oriVal - (weekDay * oneDayMillSeconds);
         return new Date(mondayVal);
     }
 
@@ -217,8 +234,8 @@
     function weekReport() {
         $('#dlg-week').dialog('open').dialog('center').dialog('setTitle', '周报');
         $('#fm-week').form('clear');
-        $("#endDate").datebox("setValue", myformatter(nowDate));
-        $("#startDate").datebox("setValue", myformatter(getSaturdayDate(nowDate)));
+        $("#endDate").datebox("setValue", myformatter(getThisSaturdayDate(nowDate)));
+        $("#startDate").datebox("setValue", myformatter(getSundayDate(nowDate)));
     }
 
     function queryWeekReport() {
@@ -251,8 +268,8 @@
     }
 
     $(document).ready(function () {
-        $("#end-date-search").datebox("setValue", myformatter(nowDate));
-        $("#start-date-search").datebox("setValue", myformatter(getSaturdayDate(nowDate)));
+        $("#end-date-search").datebox("setValue", myformatter(getThisSaturdayDate(nowDate)));
+        $("#start-date-search").datebox("setValue", myformatter(getSundayDate(nowDate)));
         flushDataGrid();
         $("#search-btn").on("click", flushDataGrid)
     })
