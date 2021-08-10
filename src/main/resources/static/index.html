@@ -86,8 +86,8 @@
 </div>
 
 
-<div id="dlg-week" class="easyui-dialog" style="width:700px"
-     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-week-buttons'">
+<div id="dlg-week" class="easyui-dialog"
+     data-options="closed:true,modal:true,border:'thin',buttons:'#dlg-week-buttons',fit:true">
     <form id="fm-week" method="post" novalidate style="margin:0;padding:20px 50px">
         <div style="margin-bottom:10px">
             <input id="startDate" name="startDate" type="text" class="easyui-datebox" required="required" label="开始时间:"
@@ -97,8 +97,20 @@
         </div>
 
         <div style="margin-bottom:10px">
-            <input id="week-content" class="easyui-textbox" label="任务详情:"
-                   style="width:100%;height:200px" multiline="true">
+            <table id="dg-week-report" style=""
+                   rownumbers="true" fitColumns="true" singleSelect="true" nowrap="false"
+                   remoteSort="false"
+                   sortName="date" sortOrder="asc"
+            >
+                <thead>
+                <tr>
+                    <th field="date" width="30" sortable="true">日期</th>
+                    <th field="morning" width="80">上午</th>
+                    <th field="afternoon" width="80" sortable="true">下午</th>
+                    <th field="night" width="80" sortable="true">晚上</th>
+                </tr>
+                </thead>
+            </table>
         </div>
 
     </form>
@@ -236,17 +248,22 @@
         $('#fm-week').form('clear');
         $("#endDate").datebox("setValue", myformatter(getThisSaturdayDate(nowDate)));
         $("#startDate").datebox("setValue", myformatter(getSundayDate(nowDate)));
+        $('#dg-week-report').datagrid({
+            data: []
+        });
     }
 
     function queryWeekReport() {
         $('#fm-week').form('submit', {
-            url: "/api/record/export/range/date",
+            url: "/api/record/export/range/date/newformatter",
             iframe: false,
+
             onSubmit: function () {
                 return $(this).form('validate');
             },
             success: function (result) {
-                $("#week-content").textbox("setText", result)
+                console.info(JSON.parse(result))
+                $('#dg-week-report').datagrid("loadData", JSON.parse(result));
             }
         });
     }
